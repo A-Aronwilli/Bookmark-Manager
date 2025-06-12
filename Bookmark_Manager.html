@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bookmark Manager (Google Sheets)</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { text-align: center; }
+    form { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    input, button { padding: 0.5rem; font-size: 1rem; }
+    .link-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .link-item { display: flex; align-items: center; gap: 0.5rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.5rem; }
+    .link-item img { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; }
+    .actions button { margin-left: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>Bookmark Manager</h1>
+
+  <form id="linkForm">
+    <input type="text" id="title" placeholder="Link Title" required />
+    <input type="url" id="url" placeholder="Link URL (https://...)" required />
+    <input type="url" id="icon" placeholder="Icon Image URL (optional)" />
+    <button type="submit">Add Link</button>
+  </form>
+
+  <div class="link-list" id="linkList">Loading bookmarks...</div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwK1wJNaMabvKpf9SKVCOUW2gowt2SuX3-oJUVHwupFSqfnFpmRUNmaB1Xo0vJQrhVh/exec'; // <-- Replace with your Web App URL
+
+    async function fetchLinks() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      renderLinks(data);
+    }
+
+async function addLink(e) {
+  e.preventDefault();
+  const title = document.getElementById('title').value.trim();
+  const url = document.getElementById('url').value.trim();
+  const icon = document.getElementById('icon').value.trim();
+
+  const payload = { title, url, icon };
+
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  // Parse response and refresh
+  const result = await res.json();
+  if (result.success) {
+    linkForm.reset();
+    fetchLinks();
+  } else {
+    alert('Failed to save bookmark.');
+  }
+}
+
+    async function deleteLink(id) {
+      if (!confirm('Delete this link?')) return;
+      await fetch(API_URL + `?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      fetchLinks();
+    }
+
+    function renderLinks(links) {
+      const list = document.getElementById('linkList');
+      list.innerHTML = '';
+      if (links.length === 0) {
+        list.textContent = 'No bookmarks yet.';
+        return;
+      }
+      links.forEach(link => {
+        const item = document.createElement('div');
+        item.className = 'link-item';
+
+        const img = document.createElement('img');
+        img.src = link.icon || 'https://via.placeholder.com/32';
+        img.alt = 'Icon';
+
+        const a = document.createElement('a');
+        a.href = link.url;
+        a.textContent = link.title;
+        a.target = '_blank';
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.onclick = () => deleteLink(link.id);
+
+        actions.appendChild(deleteBtn);
+        item.appendChild(img);
+        item.appendChild(a);
+        item.appendChild(actions);
+        list.appendChild(item);
+      });
+    }
+
+    document.getElementById('linkForm').addEventListener('submit', addLink);
+    fetchLinks();
+  </script>
+</body>
+</html>
+
