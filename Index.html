@@ -8,10 +8,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-auth-compat.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    img { height: 20px; vertical-align: middle; margin-right: 10px; }
     button { margin-left: 5px; }
     input[type="text"], input[type="url"], input[type="password"], input[type="email"] { margin: 5px; }
-        ul { list-style: none; padding: 0; }  /* Remove bullet points */
+    ul { list-style: none; padding: 0; }  /* Remove bullet points */
     li {
       display: flex;
       align-items: center;
@@ -102,7 +101,7 @@
       const li = document.createElement('li');
       li.id = id;
       li.innerHTML = `
-        <img src="${data.image || 'https://via.placeholder.com/20'}" alt="">
+        <img class="favicon" src="${data.image || 'https://via.placeholder.com/24'}" alt="">
         <a href="${data.url}" target="_blank">${data.name}</a>
         <button onclick="editBookmark('${id}', '${data.name}', '${data.url}', '${data.image || ''}')">Edit</button>
         <button onclick="deleteBookmark('${id}')">Delete</button>
@@ -144,9 +143,6 @@
       const image = prompt("Edit Image URL:", oldImage) || oldImage;
       db.ref('bookmarks/' + id).update({ name, url, image });
     }
-  </script>
-</body>
-</html>
   </script>
 </body>
 </html>
