@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bookmark Manager</title>
+  <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    img { height: 20px; vertical-align: middle; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Bookmark Manager</h1>
+
+  <form id="bookmarkForm">
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="url" id="url" placeholder="https://example.com" required>
+    <input type="url" id="image" placeholder="Image URL (optional)">
+    <button type="submit">Add Link</button>
+  </form>
+
+  <ul id="bookmarkList"></ul>
+
+  <script>
+    // Paste your Firebase config here:
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const bookmarkList = document.getElementById('bookmarkList');
+    const form = document.getElementById('bookmarkForm');
+
+    function renderBookmark(id, data) {
+      const li = document.createElement('li');
+      li.id = id;
+      li.innerHTML = `
+        <img src="${data.image || 'https://via.placeholder.com/20'}" alt="">
+        <a href="${data.url}" target="_blank">${data.name}</a>
+        <button onclick="deleteBookmark('${id}')">Delete</button>
+      `;
+      bookmarkList.appendChild(li);
+    }
+
+    function loadBookmarks() {
+      bookmarkList.innerHTML = '';
+      db.ref('bookmarks').on('child_added', snapshot => {
+        renderBookmark(snapshot.key, snapshot.val());
+      });
+      db.ref('bookmarks').on('child_removed', snapshot => {
+        document.getElementById(snapshot.key)?.remove();
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const url = document.getElementById('url').value.trim();
+      const image = document.getElementById('image').value.trim();
+      const newBookmark = db.ref('bookmarks').push();
+      newBookmark.set({ name, url, image });
+      form.reset();
+    });
+
+    function deleteBookmark(id) {
+      db.ref('bookmarks/' + id).remove();
+    }
+
+    loadBookmarks();
+  </script>
+</body>
+</html>
